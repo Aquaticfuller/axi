@@ -85,6 +85,15 @@ package axi_pkg;
   /// - The start address must be aligned to the size of each transfer.
   /// - The length of the burst must be 2, 4, 8, or 16 transfers.
   localparam BURST_WRAP  = 2'b10;
+  /// C910 specific: 
+  /// In an decrementing burst, the address for each transfer in the burst is an decrement of the
+  /// address for the previous transfer.  The decrement value depends on the size of the transfer.
+  /// For example, the address for each transfer in a burst with a size of 4 bytes is the previous
+  /// address minus four.
+  /// From c910 rtl code ciu/rtl/ct_piu_top.v, the decrement mode will provide the starting
+  /// address for the burst beat (in c910 is 128bit) with the most significant address.
+  /// This burst type is used for accesses to normal sequential memory.
+  localparam BURST_DECR  = 2'b11;
 
   /// Normal access success.  Indicates that a normal access has been successful. Can also indicate
   /// that an exclusive access has failed.

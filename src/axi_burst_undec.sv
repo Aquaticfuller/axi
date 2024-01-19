@@ -17,8 +17,6 @@
 //                    if found any address conflist, stall the incoming request.
 
 module axi_burst_undec #(
-  // bypass enable
-  parameter bit  Bypass     = 1'b0,
   // the whole burst length in bit
   parameter int unsigned TotalBurstLength = 512,
   // AXI channel structs
@@ -48,7 +46,7 @@ module axi_burst_undec #(
     AW_SENT
   } undec_state_e;
 
-  undec_state_e state_d, state_q
+  undec_state_e state_d, state_q;
   logic state_en;
 
   aw_chan_t aw_d, aw_q;
@@ -75,7 +73,8 @@ module axi_burst_undec #(
     mst_req_o.aw_valid  = 1'b0;
     mst_req_o.aw        = aw_q;
     mst_req_o.w_valid   = 1'b0;
-    mst_req_o.w         = w_q;
+    mst_req_o.w         = w_q[0];
+    mst_req_o.w.last    = 1'b0;
 
     slv_resp_o.aw_ready = 1'b0;
     slv_resp_o.w_ready  = 1'b0;
@@ -134,17 +133,17 @@ module axi_burst_undec #(
       end
       AW_SENT: begin
         mst_req_o.w_valid   = 1'b1;
-        mst_req_o.w.data    = w_q[w_burst_snd_cnt_q];
-        mst_req_o.w.last    = &w_burst_snd_cnt_q;
+        mst_req_o.w.data    = w_q[w_burst_snd_cnt_q].data;
+        mst_req_o.w.last    = ~(|w_burst_snd_cnt_q);
         if(mst_resp_i.aw_ready) begin
           w_burst_snd_cnt_en  = 1'b1;
-          if(&w_burst_snd_cnt_q) begin
+          if(~(|w_burst_snd_cnt_q)) begin
             state_d   = IDLE;
             state_en  = 1'b1;
           end
         end
       end
-      default: 
+      default:;
     endcase
   end
 
@@ -196,7 +195,7 @@ module axi_burst_undec #(
 
   // other AXI channel output and hazard check
   logic ar_addr_comp;
-  assign ar_addr_comp = aw_q.addr[$bits(aw_q.addr)-1:12] == slv_req_i.addr[$bits(aw_q.addr)-1:12];
+  assign ar_addr_comp = aw_q.addr[$bits(aw_q.addr)-1:12] == slv_req_i.ar.addr[$bits(aw_q.addr)-1:12];
 
   always_comb begin
     // by default, bypass the module

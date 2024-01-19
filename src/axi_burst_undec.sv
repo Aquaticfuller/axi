@@ -135,7 +135,7 @@ module axi_burst_undec #(
         mst_req_o.w_valid   = 1'b1;
         mst_req_o.w.data    = w_q[w_burst_snd_cnt_q].data;
         mst_req_o.w.last    = ~(|w_burst_snd_cnt_q);
-        if(mst_resp_i.aw_ready) begin
+        if(mst_resp_i.w_ready) begin
           w_burst_snd_cnt_en  = 1'b1;
           if(~(|w_burst_snd_cnt_q)) begin
             state_d   = IDLE;
